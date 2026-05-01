@@ -227,14 +227,16 @@ blocks:
     label2: DSB
     label3: AM
     label4: FM5K
+    label5: WFM
     labels: '[]'
-    num_opts: '3'
+    num_opts: '6'
     option0: '0'
     option1: '1'
     option2: '2'
     option3: '3'
     option4: '4'
-    options: '[0, 1, 2]'
+    option5: '5'
+    options: '[0, 1, 2, 3, 4, 5]'
     orient: Qt.QHBoxLayout
     type: int
     value: '4'
