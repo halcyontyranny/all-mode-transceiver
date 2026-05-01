@@ -508,23 +508,37 @@ blocks:
     coordinate: [536, 12.0]
     rotation: 0
     state: true
-- name: analog_am_demod_cf_0
-  id: analog_am_demod_cf
+- name: blocks_complex_to_mag_rx_am
+  id: blocks_complex_to_mag
   parameters:
     affinity: ''
     alias: ''
-    audio_decim: '1'
-    audio_pass: '3200'
-    audio_stop: '4000'
-    chan_rate: samp_rate
-    comment: RX AM demod
+    comment: RX AM envelope detection
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1900, 2100.0]
+    rotation: 0
+    state: true
+- name: dc_blocker_xx_rx_am
+  id: dc_blocker_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Remove AM carrier DC offset regardless of signal amplitude
+    length: '32'
+    long_form: 'True'
     maxoutbuf: '0'
     minoutbuf: '0'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1900, 2100.0]
+    coordinate: [2060, 2100.0]
     rotation: 0
     state: true
 - name: analog_const_source_x_0
@@ -1833,7 +1847,8 @@ blocks:
     state: true
 
 connections:
-- [analog_am_demod_cf_0, '0', blocks_selector_rx, '3']
+- [blocks_complex_to_mag_rx_am, '0', dc_blocker_xx_rx_am, '0']
+- [dc_blocker_xx_rx_am, '0', blocks_selector_rx, '3']
 - [analog_const_source_x_0, '0', blocks_float_to_complex_0, '0']
 - [analog_const_source_x_0_0, '0', blocks_selector_0_0, '0']
 - [analog_const_source_x_0_0, '0', blocks_selector_0_0, '1']
@@ -1888,7 +1903,7 @@ connections:
 - [fft_filter_xxx_0_0_0, '0', blocks_selector_0, '2']
 - [fft_filter_xxx_0_0_0_0, '0', blocks_selector_0, '3']
 - [fft_filter_xxx_0_0_0_0_0, '0', blocks_selector_0, '4']
-- [fft_filter_xxx_rx_am, '0', analog_am_demod_cf_0, '0']
+- [fft_filter_xxx_rx_am, '0', blocks_complex_to_mag_rx_am, '0']
 - [fft_filter_xxx_rx_dsb, '0', blocks_complex_to_real_rx_dsb, '0']
 - [fft_filter_xxx_rx_lsb, '0', blocks_complex_to_real_rx_lsb, '0']
 - [fft_filter_xxx_rx_usb, '0', blocks_complex_to_real_rx_usb, '0']
