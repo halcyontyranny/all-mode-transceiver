@@ -192,7 +192,7 @@ class HackRF_Siggen(gr.top_block, Qt.QWidget):
         else:
         	self._output_amp_choices = {'Pressed': 14, 'Released': 0}
 
-        _output_amp_toggle_button = qtgui.ToggleButton(self.set_output_amp, 'HackRF Output Amp', self._output_amp_choices, False,"'value'".replace("'",""))
+        _output_amp_toggle_button = qtgui.ToggleButton(self.set_output_amp, 'HackRF Base Amp', self._output_amp_choices, False,"'value'".replace("'",""))
         _output_amp_toggle_button.setColors("red","green","green","default")
         self.output_amp = _output_amp_toggle_button
 
@@ -202,9 +202,9 @@ class HackRF_Siggen(gr.top_block, Qt.QWidget):
         for c in range(1, 2):
             self.top_grid_layout.setColumnStretch(c, 1)
         # Create the options list
-        self._mod_options = [0, 1, 2]
+        self._mod_options = [0, 1, 2, 3, 4, 5]
         # Create the labels list
-        self._mod_labels = ['LSB', 'USB', 'DSB']
+        self._mod_labels = ['LSB', 'USB', 'DSB', 'AM', 'FM5K', 'WFM']
         # Create the combo box
         # Create the radio buttons
         self._mod_group_box = Qt.QGroupBox("Modulation Type" + ": ")
@@ -517,6 +517,8 @@ class HackRF_Siggen(gr.top_block, Qt.QWidget):
         self.fft_filter_xxx_0_0.declare_sample_delay(0)
         self.fft_filter_xxx_0 = filter.fft_filter_ccc(1, LSB_band_pass_filter_taps, 1)
         self.fft_filter_xxx_0.declare_sample_delay(0)
+        self.dc_blocker_xx_rx_am = filter.dc_blocker_ff(32, True)
+        self.dc_blocker_cc_rx_0 = filter.dc_blocker_cc(32, True)
         self.blocks_wavfile_source_0 = blocks.wavfile_source(wavefile, True)
         self.blocks_selector_tx_out = blocks.selector(gr.sizeof_gr_complex*1,wfm_active,0)
         self.blocks_selector_tx_out.set_enabled(True)
@@ -542,6 +544,7 @@ class HackRF_Siggen(gr.top_block, Qt.QWidget):
         self.blocks_complex_to_real_rx_usb = blocks.complex_to_real(1)
         self.blocks_complex_to_real_rx_lsb = blocks.complex_to_real(1)
         self.blocks_complex_to_real_rx_dsb = blocks.complex_to_real(1)
+        self.blocks_complex_to_mag_rx_am = blocks.complex_to_mag(1)
         self.blocks_complex_to_float_0 = blocks.complex_to_float(1)
         self.blocks_add_xx_1 = blocks.add_vff(1)
         self.blocks_add_xx_0_1 = blocks.add_vff(1)
@@ -578,24 +581,17 @@ class HackRF_Siggen(gr.top_block, Qt.QWidget):
         self.analog_const_source_x_0_0_0 = analog.sig_source_f(0, analog.GR_CONST_WAVE, 0, 0, 1.0)
         self.analog_const_source_x_0_0 = analog.sig_source_f(0, analog.GR_CONST_WAVE, 0, 0, 0)
         self.analog_const_source_x_0 = analog.sig_source_f(0, analog.GR_CONST_WAVE, 0, 0, 0)
-        self.analog_am_demod_cf_0 = analog.am_demod_cf(
-        	channel_rate=samp_rate,
-        	audio_decim=1,
-        	audio_pass=3200,
-        	audio_stop=4000,
-        )
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.analog_am_demod_cf_0, 0), (self.blocks_selector_rx, 3))
         self.connect((self.analog_const_source_x_0, 0), (self.blocks_float_to_complex_0, 0))
-        self.connect((self.analog_const_source_x_0_0, 0), (self.blocks_selector_0_0, 0))
-        self.connect((self.analog_const_source_x_0_0, 0), (self.blocks_selector_0_0, 4))
         self.connect((self.analog_const_source_x_0_0, 0), (self.blocks_selector_0_0, 1))
         self.connect((self.analog_const_source_x_0_0, 0), (self.blocks_selector_0_0, 2))
         self.connect((self.analog_const_source_x_0_0, 0), (self.blocks_selector_0_0, 5))
+        self.connect((self.analog_const_source_x_0_0, 0), (self.blocks_selector_0_0, 0))
+        self.connect((self.analog_const_source_x_0_0, 0), (self.blocks_selector_0_0, 4))
         self.connect((self.analog_const_source_x_0_0_0, 0), (self.blocks_selector_0_0, 3))
         self.connect((self.analog_nbfm_rx_0, 0), (self.blocks_selector_rx, 4))
         self.connect((self.analog_nbfm_tx_0, 0), (self.fft_filter_xxx_0_0_0_0_0, 0))
@@ -613,6 +609,7 @@ class HackRF_Siggen(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_add_xx_1, 0), (self.blocks_selector_0_1, 5))
         self.connect((self.blocks_complex_to_float_0, 1), (self.blocks_null_sink_0, 0))
         self.connect((self.blocks_complex_to_float_0, 0), (self.qtgui_time_sink_x_0, 0))
+        self.connect((self.blocks_complex_to_mag_rx_am, 0), (self.dc_blocker_xx_rx_am, 0))
         self.connect((self.blocks_complex_to_real_rx_dsb, 0), (self.blocks_selector_rx, 2))
         self.connect((self.blocks_complex_to_real_rx_lsb, 0), (self.blocks_selector_rx, 0))
         self.connect((self.blocks_complex_to_real_rx_usb, 0), (self.blocks_selector_rx, 1))
@@ -641,12 +638,13 @@ class HackRF_Siggen(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_selector_rx, 0), (self.blocks_multiply_const_vxx_rx_vol, 0))
         self.connect((self.blocks_selector_tx_out, 0), (self.osmosdr_transceiver_0, 0))
         self.connect((self.blocks_wavfile_source_0, 0), (self.blocks_multiply_const_vxx_0, 0))
+        self.connect((self.dc_blocker_xx_rx_am, 0), (self.blocks_selector_rx, 3))
         self.connect((self.fft_filter_xxx_0, 0), (self.blocks_selector_0, 0))
         self.connect((self.fft_filter_xxx_0_0, 0), (self.blocks_selector_0, 1))
         self.connect((self.fft_filter_xxx_0_0_0, 0), (self.blocks_selector_0, 2))
         self.connect((self.fft_filter_xxx_0_0_0_0, 0), (self.blocks_selector_0, 3))
         self.connect((self.fft_filter_xxx_0_0_0_0_0, 0), (self.blocks_selector_0, 4))
-        self.connect((self.fft_filter_xxx_rx_am, 0), (self.analog_am_demod_cf_0, 0))
+        self.connect((self.fft_filter_xxx_rx_am, 0), (self.blocks_complex_to_mag_rx_am, 0))
         self.connect((self.fft_filter_xxx_rx_dsb, 0), (self.blocks_complex_to_real_rx_dsb, 0))
         self.connect((self.fft_filter_xxx_rx_lsb, 0), (self.blocks_complex_to_real_rx_lsb, 0))
         self.connect((self.fft_filter_xxx_rx_usb, 0), (self.blocks_complex_to_real_rx_usb, 0))
@@ -655,12 +653,13 @@ class HackRF_Siggen(gr.top_block, Qt.QWidget):
         self.connect((self.rational_resampler_wfm_rx_0, 0), (self.analog_wfm_rcv_0, 0))
         self.connect((self.rational_resampler_wfm_tx_0, 0), (self.blocks_selector_tx_out, 1))
         self.connect((self.rational_resampler_xxx_0_0_0_0, 0), (self.blocks_selector_tx_out, 0))
-        self.connect((self.rational_resampler_xxx_rx_0, 0), (self.analog_nbfm_rx_0, 0))
-        self.connect((self.rational_resampler_xxx_rx_0, 0), (self.fft_filter_xxx_rx_am, 0))
-        self.connect((self.rational_resampler_xxx_rx_0, 0), (self.fft_filter_xxx_rx_dsb, 0))
-        self.connect((self.rational_resampler_xxx_rx_0, 0), (self.fft_filter_xxx_rx_lsb, 0))
-        self.connect((self.rational_resampler_xxx_rx_0, 0), (self.fft_filter_xxx_rx_usb, 0))
-        self.connect((self.rational_resampler_xxx_rx_0, 0), (self.qtgui_waterfall_sink_x_1, 0))
+        self.connect((self.rational_resampler_xxx_rx_0, 0), (self.dc_blocker_cc_rx_0, 0))
+        self.connect((self.dc_blocker_cc_rx_0, 0), (self.analog_nbfm_rx_0, 0))
+        self.connect((self.dc_blocker_cc_rx_0, 0), (self.fft_filter_xxx_rx_am, 0))
+        self.connect((self.dc_blocker_cc_rx_0, 0), (self.fft_filter_xxx_rx_dsb, 0))
+        self.connect((self.dc_blocker_cc_rx_0, 0), (self.fft_filter_xxx_rx_lsb, 0))
+        self.connect((self.dc_blocker_cc_rx_0, 0), (self.fft_filter_xxx_rx_usb, 0))
+        self.connect((self.dc_blocker_cc_rx_0, 0), (self.qtgui_waterfall_sink_x_1, 0))
 
 
     def closeEvent(self, event):

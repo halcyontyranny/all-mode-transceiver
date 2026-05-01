@@ -213,7 +213,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [288, 716.0]
+    coordinate: [344, 804.0]
     rotation: 0
     state: enabled
 - name: mod
@@ -252,7 +252,7 @@ blocks:
     comment: ''
     gui_hint: 2,1,1,1
     initPressed: 'False'
-    label: HackRF Output Amp
+    label: HackRF Base Amp
     outputmsgname: value
     pressBackgroundColor: green
     pressFontColor: default
@@ -506,39 +506,6 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [536, 12.0]
-    rotation: 0
-    state: true
-- name: blocks_complex_to_mag_rx_am
-  id: blocks_complex_to_mag
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: RX AM envelope detection
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1900, 2100.0]
-    rotation: 0
-    state: true
-- name: dc_blocker_xx_rx_am
-  id: dc_blocker_xx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: Remove AM carrier DC offset regardless of signal amplitude
-    length: '32'
-    long_form: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [2060, 2100.0]
     rotation: 0
     state: true
 - name: analog_const_source_x_0
@@ -835,6 +802,22 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [1064, 288.0]
+    rotation: 0
+    state: true
+- name: blocks_complex_to_mag_rx_am
+  id: blocks_complex_to_mag
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: RX AM envelope detection
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1900, 2100.0]
     rotation: 0
     state: true
 - name: blocks_complex_to_real_rx_dsb
@@ -1211,6 +1194,24 @@ blocks:
     coordinate: [544, 932.0]
     rotation: 0
     state: enabled
+- name: dc_blocker_xx_rx_am
+  id: dc_blocker_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Remove AM carrier DC offset regardless of signal amplitude
+    length: '32'
+    long_form: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: ff
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1960, 2180.0]
+    rotation: 0
+    state: true
 - name: fft_filter_xxx_0
   id: fft_filter_xxx
   parameters:
@@ -1759,7 +1760,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [936, 660.0]
+    coordinate: [896, 580.0]
     rotation: 0
     state: true
 - name: rational_resampler_xxx_0_0_0_0
@@ -1800,6 +1801,24 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [1500, 44.0]
+    rotation: 0
+    state: true
+- name: dc_blocker_cc_rx_0
+  id: dc_blocker_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Remove HackRF IQ DC offset (eliminates center-frequency red line on waterfall)
+    length: '32'
+    long_form: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: cc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1640, 44.0]
     rotation: 0
     state: true
 - name: snippet_0
@@ -1847,8 +1866,6 @@ blocks:
     state: true
 
 connections:
-- [blocks_complex_to_mag_rx_am, '0', dc_blocker_xx_rx_am, '0']
-- [dc_blocker_xx_rx_am, '0', blocks_selector_rx, '3']
 - [analog_const_source_x_0, '0', blocks_float_to_complex_0, '0']
 - [analog_const_source_x_0_0, '0', blocks_selector_0_0, '0']
 - [analog_const_source_x_0_0, '0', blocks_selector_0_0, '1']
@@ -1872,6 +1889,7 @@ connections:
 - [blocks_add_xx_1, '0', blocks_selector_0_1, '5']
 - [blocks_complex_to_float_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_complex_to_float_0, '1', blocks_null_sink_0, '0']
+- [blocks_complex_to_mag_rx_am, '0', dc_blocker_xx_rx_am, '0']
 - [blocks_complex_to_real_rx_dsb, '0', blocks_selector_rx, '2']
 - [blocks_complex_to_real_rx_lsb, '0', blocks_selector_rx, '0']
 - [blocks_complex_to_real_rx_usb, '0', blocks_selector_rx, '1']
@@ -1898,6 +1916,7 @@ connections:
 - [blocks_selector_rx, '0', blocks_multiply_const_vxx_rx_vol, '0']
 - [blocks_selector_tx_out, '0', osmosdr_transceiver_0, '0']
 - [blocks_wavfile_source_0, '0', blocks_multiply_const_vxx_0, '0']
+- [dc_blocker_xx_rx_am, '0', blocks_selector_rx, '3']
 - [fft_filter_xxx_0, '0', blocks_selector_0, '0']
 - [fft_filter_xxx_0_0, '0', blocks_selector_0, '1']
 - [fft_filter_xxx_0_0_0, '0', blocks_selector_0, '2']
@@ -1912,12 +1931,13 @@ connections:
 - [rational_resampler_wfm_rx_0, '0', analog_wfm_rcv_0, '0']
 - [rational_resampler_wfm_tx_0, '0', blocks_selector_tx_out, '1']
 - [rational_resampler_xxx_0_0_0_0, '0', blocks_selector_tx_out, '0']
-- [rational_resampler_xxx_rx_0, '0', analog_nbfm_rx_0, '0']
-- [rational_resampler_xxx_rx_0, '0', fft_filter_xxx_rx_am, '0']
-- [rational_resampler_xxx_rx_0, '0', fft_filter_xxx_rx_dsb, '0']
-- [rational_resampler_xxx_rx_0, '0', fft_filter_xxx_rx_lsb, '0']
-- [rational_resampler_xxx_rx_0, '0', fft_filter_xxx_rx_usb, '0']
-- [rational_resampler_xxx_rx_0, '0', qtgui_waterfall_sink_x_1, '0']
+- [rational_resampler_xxx_rx_0, '0', dc_blocker_cc_rx_0, '0']
+- [dc_blocker_cc_rx_0, '0', analog_nbfm_rx_0, '0']
+- [dc_blocker_cc_rx_0, '0', fft_filter_xxx_rx_am, '0']
+- [dc_blocker_cc_rx_0, '0', fft_filter_xxx_rx_dsb, '0']
+- [dc_blocker_cc_rx_0, '0', fft_filter_xxx_rx_lsb, '0']
+- [dc_blocker_cc_rx_0, '0', fft_filter_xxx_rx_usb, '0']
+- [dc_blocker_cc_rx_0, '0', qtgui_waterfall_sink_x_1, '0']
 - [virtual_source_0, '0', analog_nbfm_tx_0, '0']
 - [virtual_source_0, '0', analog_wfm_tx_0, '0']
 - [virtual_source_0, '0', blocks_add_xx_0_1, '1']
